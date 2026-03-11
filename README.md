@@ -14,7 +14,7 @@ Flutter 响应式状态管理框架完整指南
 
 ## 内容结构
 
-```
+```text
 riverpod-v3/
 ├── SKILL.md              # 主文档（1483 行）
 ├── references/           # 详细参考文档
@@ -87,5 +87,5 @@ dart run build_runner watch -d
 
 ---
 
-**维护者**: Remi Rousselet (@rrousselGit)  
+**维护者**: Remi Rousselet (@rrousselGit)
 **文档整理**: AI Assistant

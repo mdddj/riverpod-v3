@@ -63,22 +63,159 @@
 
 示例 1 (dart):
 ```dart
-void main() => runApp(const ProviderScope(child: MyApp()));class MyApp extends StatelessWidget {  const MyApp({super.key});  @override  Widget build(BuildContext context) {    return MaterialApp(      routes: {        '/detail-page': (_) => const DetailPageView(),      },      home: const ActivityView(),    );  }}class ActivityView extends ConsumerWidget {  const ActivityView({super.key});  @override  Widget build(BuildContext context, WidgetRef ref) {    return Scaffold(      appBar: AppBar(title: const Text('Home screen')),      body: const Center(        child: Text('Click the button to open the detail page'),      ),      floatingActionButton: FloatingActionButton(        onPressed: () => Navigator.of(context).pushNamed('/detail-page'),        child: const Icon(Icons.add),      ),    );  }}
+void main() => runApp(const ProviderScope(child: MyApp()));
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      routes: {'/detail-page': (_) => const DetailPageView()},
+      home: const ActivityView(),
+    );
+  }
+}
+
+class ActivityView extends ConsumerWidget {
+  const ActivityView({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Home screen')),
+      body: const Center(
+        child: Text('Click the button to open the detail page'),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => Navigator.of(context).pushNamed('/detail-page'),
+        child: const Icon(Icons.add),
+      ),
+    );
+  }
+}
 ```
 
 示例 2 (dart):
 ```dart
-class Activity {  Activity({    required this.activity,    required this.type,    required this.participants,    required this.price,  });  factory Activity.fromJson(Map<Object?, Object?> json) {    return Activity(      activity: json['activity']! as String,      type: json['type']! as String,      participants: json['participants']! as int,      price: json['price']! as double,    );  }  final String activity;  final String type;  final int participants;  final double price;}final activityProvider = FutureProvider.autoDispose<Activity>((ref) async {  final response = await http.get(    Uri.https('www.boredapi.com', '/api/activity'),  );  final json = jsonDecode(response.body) as Map;  return Activity.fromJson(json);});class DetailPageView extends ConsumerWidget {  const DetailPageView({super.key});  @override  Widget build(BuildContext context, WidgetRef ref) {    final activity = ref.watch(activityProvider);    return Scaffold(      appBar: AppBar(        title: const Text('Detail page'),      ),      body: RefreshIndicator(        onRefresh: () => ref.refresh(activityProvider.future),        child: ListView(          children: [            switch (activity) {              AsyncValue(:final value?) => Text(value.activity),              AsyncValue(:final error?) => Text('Error: $error'),              _ => const Center(child: CircularProgressIndicator()),            },          ],        ),      ),    );  }}
+class Activity {
+  Activity({
+    required this.activity,
+    required this.type,
+    required this.participants,
+    required this.price,
+  });
+  factory Activity.fromJson(Map<Object?, Object?> json) {
+    return Activity(
+      activity: json['activity']! as String,
+      type: json['type']! as String,
+      participants: json['participants']! as int,
+      price: json['price']! as double,
+    );
+  }
+  final String activity;
+  final String type;
+  final int participants;
+  final double price;
+}
+
+final activityProvider = FutureProvider.autoDispose<Activity>((ref) async {
+  final response = await http.get(
+    Uri.https('www.boredapi.com', '/api/activity'),
+  );
+  final json = jsonDecode(response.body) as Map;
+  return Activity.fromJson(json);
+});
+
+class DetailPageView extends ConsumerWidget {
+  const DetailPageView({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final activity = ref.watch(activityProvider);
+    return Scaffold(
+      appBar: AppBar(title: const Text('Detail page')),
+      body: RefreshIndicator(
+        onRefresh: () => ref.refresh(activityProvider.future),
+        child: ListView(
+          children: [
+            switch (activity) {
+              AsyncValue(:final value?) => Text(value.activity),
+              AsyncValue(:final error?) => Text('Error: $error'),
+              _ => const Center(child: CircularProgressIndicator()),
+            },
+          ],
+        ),
+      ),
+    );
+  }
+}
 ```
 
 示例 3 (dart):
 ```dart
-@freezedsealed class Activity with _$Activity {  factory Activity({    required String activity,    required String type,    required int participants,    required double price,  }) = _Activity;  factory Activity.fromJson(Map<String, dynamic> json) =>      _$ActivityFromJson(json);}@riverpodFuture<Activity> activity(Ref ref) async {  final response = await http.get(    Uri.https('www.boredapi.com', '/api/activity'),  );  final json = jsonDecode(response.body) as Map;  return Activity.fromJson(Map.from(json));}class DetailPageView extends ConsumerWidget {  const DetailPageView({super.key});  @override  Widget build(BuildContext context, WidgetRef ref) {    final activity = ref.watch(activityProvider);    return Scaffold(      appBar: AppBar(        title: const Text('Detail page'),      ),      body: RefreshIndicator(        onRefresh: () => ref.refresh(activityProvider.future),        child: ListView(          children: [            switch (activity) {              AsyncValue(:final value?) => Text(value.activity),              AsyncValue(:final error?) => Text('Error: $error'),              _ => const Center(child: CircularProgressIndicator()),            },          ],        ),      ),    );  }}
+@freezedsealed
+class Activity with _$Activity {
+  factory Activity({
+    required String activity,
+    required String type,
+    required int participants,
+    required double price,
+  }) = _Activity;
+  factory Activity.fromJson(Map<String, dynamic> json) =>
+      _$ActivityFromJson(json);
+}
+
+@riverpod
+Future<Activity> activity(Ref ref) async {
+  final response = await http.get(
+    Uri.https('www.boredapi.com', '/api/activity'),
+  );
+  final json = jsonDecode(response.body) as Map;
+  return Activity.fromJson(Map.from(json));
+}
+
+class DetailPageView extends ConsumerWidget {
+  const DetailPageView({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final activity = ref.watch(activityProvider);
+    return Scaffold(
+      appBar: AppBar(title: const Text('Detail page')),
+      body: RefreshIndicator(
+        onRefresh: () => ref.refresh(activityProvider.future),
+        child: ListView(
+          children: [
+            switch (activity) {
+              AsyncValue(:final value?) => Text(value.activity),
+              AsyncValue(:final error?) => Text('Error: $error'),
+              _ => const Center(child: CircularProgressIndicator()),
+            },
+          ],
+        ),
+      ),
+    );
+  }
+}
 ```
 
 示例 4 (dart):
 ```dart
-final activityProvider = FutureProvider.autoDispose<Activity>((ref) async {  // 我们使用 package:http 创建一个 HTTP 客户端  final client = http.Client();  // 在销毁时，我们关闭客户端。  // 这将取消客户端可能有的任何待处理请求。  ref.onDispose(client.close);  // 我们现在使用客户端发出请求，而不是"get"函数。  final response = await client.get(    Uri.https('www.boredapi.com', '/api/activity'),  );  // 其余代码与之前相同  final json = jsonDecode(response.body) as Map;  return Activity.fromJson(Map.from(json));});
+final activityProvider = FutureProvider.autoDispose<Activity>((ref) async {
+  // 我们使用 package:http 创建一个 HTTP 客户端
+  final client = http.Client();
+  // 在销毁时，我们关闭客户端。
+  // 这将取消客户端可能有的任何待处理请求。
+  ref.onDispose(client.close);
+  // 我们现在使用客户端发出请求，而不是"get"函数。
+  final response = await client.get(
+    Uri.https('www.boredapi.com', '/api/activity'),
+  );
+  // 其余代码与之前相同
+  final json = jsonDecode(response.body) as Map;
+  return Activity.fromJson(Map.from(json));
+});
 ```
 
 ---

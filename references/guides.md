@@ -126,23 +126,68 @@ fetchRandomJoke 函数和 randomJokeProvider 之间的分离不是强制性的�
 
 **示例:**
 
-示例 1 (unknown):
-```unknown
+示例 1 (bash):
+```bash
 flutter create first_app
 ```
 
 示例 2 (dart):
 ```dart
-import 'package:flutter/material.dart';class HomeView extends StatelessWidget {  const HomeView({super.key});  @override  Widget build(BuildContext context) {    return Scaffold(      appBar: AppBar(title: const Text('Random Joke Generator')),      body: SizedBox.expand(        child: Stack(          alignment: Alignment.center,          children: [            const SelectableText(              'What kind of bagel can fly?\n\n'              'A plain bagel.',              textAlign: TextAlign.center,              style: TextStyle(fontSize: 24),            ),            Positioned(              bottom: 20,              child: ElevatedButton(                onPressed: () {},                child: const Text('Get another joke'),              ),            ),          ],        ),      ),    );  }}
+import 'package:flutter/material.dart';
+
+class HomeView extends StatelessWidget {
+  const HomeView({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Random Joke Generator')),
+      body: SizedBox.expand(
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            const SelectableText(
+              'What kind of bagel can fly?\n\n'
+              'A plain bagel.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 24),
+            ),
+            Positioned(
+              bottom: 20,
+              child: ElevatedButton(
+                onPressed: () {},
+                child: const Text('Get another joke'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 ```
 
 示例 3 (dart):
 ```dart
-import 'package:flutter/material.dart';import 'home.dart';void main() {  runApp(const MyApp());}class MyApp extends StatelessWidget {  const MyApp({super.key});  @override  Widget build(BuildContext context) {    return const MaterialApp(home: HomeView());  }}
+import 'package:flutter/material.dart';
+import 'home.dart';
+
+void main() {
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const MaterialApp(home: HomeView());
+  }
+}
 ```
 
-示例 4 (unknown):
-```unknown
+示例 4 (bash):
+```bash
 flutter pub add flutter_riverpod dio
 ```
 

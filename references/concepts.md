@@ -85,7 +85,10 @@ The solution is to, like with BuildContext, check mounted before using ref:
 
 示例 1 (dart):
 ```dart
-T refresh<T>(provider) {  invalidate(provider);  return read(provider);}
+T refresh<T>(provider) {
+  invalidate(provider);
+  return read(provider);
+}
 ```
 
 示例 2 (dart):
@@ -95,12 +98,21 @@ ref.read(yourNotifierProvider.notifier).yourMethod();
 
 示例 3 (dart):
 ```dart
-ElevatedButton(  onPressed: () async {    await future;    ref.read(...); // May throw "Using "ref" when a widget is about to or has been unmounted is unsafe."  })
+ElevatedButton(
+onPressed: () async {
+  await future;
+  ref.read(...); // May throw "Using "ref" when a widget is about to or has been unmounted is unsafe."
+})
 ```
 
 示例 4 (dart):
 ```dart
-ElevatedButton(  onPressed: () async {    await future;    if (!context.mounted) return;    ref.read(...); // No longer throws  })
+ElevatedButton(
+onPressed: () async {
+  await future;
+  if (!context.mounted) return;
+  ref.read(...); // No longer throws
+})
 ```
 
 ---
@@ -169,22 +181,64 @@ Here is the combined source of everything we've covered so far:
 
 示例 1 (dart):
 ```dart
-class Activity {  Activity({    required this.activity,    required this.type,    required this.participants,    required this.price,  });  factory Activity.fromJson(Map<Object?, Object?> json) {    return Activity(      activity: json['activity']! as String,      type: json['type']! as String,      participants: json['participants']! as int,      price: json['price']! as double,    );  }  final String activity;  final String type;  final int participants;  final double price;}
+class Activity {
+  Activity({
+    required this.activity,
+    required this.type,
+    required this.participants,
+    required this.price,
+  });
+  factory Activity.fromJson(Map<Object?, Object?> json) {
+    return Activity(
+      activity: json['activity']! as String,
+      type: json['type']! as String,
+      participants: json['participants']! as int,
+      price: json['price']! as double,
+    );
+  }
+  final String activity;
+  final String type;
+  final int participants;
+  final double price;
+}
 ```
 
 示例 2 (dart):
 ```dart
-@freezedsealed class Activity with _$Activity {  factory Activity({    required String activity,    required String type,    required int participants,    required double price,  }) = _Activity;  factory Activity.fromJson(Map<String, dynamic> json) =>      _$ActivityFromJson(json);}
+@freezedsealed
+class Activity with _$Activity {
+  factory Activity({
+    required String activity,
+    required String type,
+    required int participants,
+    required double price,
+  }) = _Activity;
+  factory Activity.fromJson(Map<String, dynamic> json) =>
+      _$ActivityFromJson(json);
+}
 ```
 
 示例 3 (dart):
 ```dart
-final activityProvider = FutureProvider.autoDispose<Activity>((ref) async {  final response = await http.get(    Uri.https('www.boredapi.com', '/api/activity'),  );  final json = jsonDecode(response.body) as Map;  return Activity.fromJson(json);});
+final activityProvider = FutureProvider.autoDispose<Activity>((ref) async {
+  final response = await http.get(
+    Uri.https('www.boredapi.com', '/api/activity'),
+  );
+  final json = jsonDecode(response.body) as Map;
+  return Activity.fromJson(json);
+});
 ```
 
 示例 4 (dart):
 ```dart
-@riverpodFuture<Activity> activity(Ref ref) async {  final response = await http.get(    Uri.https('www.boredapi.com', '/api/activity'),  );  final json = jsonDecode(response.body) as Map;  return Activity.fromJson(Map.from(json));}
+@riverpod
+Future<Activity> activity(Ref ref) async {
+  final response = await http.get(
+    Uri.https('www.boredapi.com', '/api/activity'),
+  );
+  final json = jsonDecode(response.body) as Map;
+  return Activity.fromJson(Map.from(json));
+}
 ```
 
 ---
@@ -272,22 +326,65 @@ Although if you wish to unregister them manually, you can do so by using the ret
 
 示例 1 (dart):
 ```dart
-final myProvider = Provider<int>((ref) {  // ref is available here  ...});final myNotifierProvider = NotifierProvider<MyNotifier, int>(MyNotifier.new);class MyNotifier extends Notifier<int> {  @override  int build() {    // this.ref is available anywhere inside notifiers    ref.watch(someProvider);    ...  }}
+final myProvider = Provider<int>((ref) {
+  // ref is available here
+  ...
+});
+
+final myNotifierProvider = NotifierProvider<MyNotifier, int>(MyNotifier.new);
+
+class MyNotifier extends Notifier<int> {
+  @override
+  int build() {
+    // this.ref is available anywhere inside notifiers
+    ref.watch(someProvider);
+    ...
+  }
+}
 ```
 
 示例 2 (dart):
 ```dart
-@riverpodint myProvider(Ref ref) {  // ref is available here  ...}@riverpodclass MyNotifier extends _$MyNotifier {  @override  int build() {    // this.ref is available anywhere inside notifiers    ref.watch(someProvider);    ...  }}
+@riverpod
+int myProvider(Ref ref) {
+  // ref is available here
+  ...
+}
+
+@riverpod
+class MyNotifier extends _$MyNotifier {
+  @override
+  int build() {
+    // this.ref is available anywhere inside notifiers
+    ref.watch(someProvider);
+    ...
+  }
+}
 ```
 
 示例 3 (dart):
 ```dart
-Consumer(  builder: (context, ref, _) {    // ref is available here    final value = ref.watch(myProvider);    return Text('$value');  },);
+Consumer(
+  builder: (context, ref, _) {
+    // ref is available here
+    final value = ref.watch(myProvider);
+    return Text('$value');
+  },
+);
 ```
 
 示例 4 (dart):
 ```dart
-void myFunction(WidgetRef ref) {  // You can pass the ref around!}...Consumer(  builder: (context, ref, _) {    return ElevatedButton(      onPressed: () => myFunction(ref), // Pass the ref to your function      child: Text('Click me'),    );  },);
+void myFunction(WidgetRef ref) {
+  // You can pass the ref around!}...
+
+  Consumer(
+  builder: (context, ref, _) {
+    return ElevatedButton(
+    onPressed: () => myFunction(ref), // Pass the ref to your function
+    child: Text('Click me'),
+    );
+  },);
 ```
 
 ---
@@ -327,22 +424,87 @@ Although there are ways to not expose the loading/error states in those cases (r
 
 示例 1 (dart):
 ```dart
-void main() {  runApp(ProviderScope(child: MyApp()));}class MyApp extends StatelessWidget {  @override  Widget build(BuildContext context) {    return const _EagerInitialization(      // TODO: Render your app here      child: MaterialApp(),    );  }}class _EagerInitialization extends ConsumerWidget {  const _EagerInitialization({required this.child});  final Widget child;  @override  Widget build(BuildContext context, WidgetRef ref) {    // Eagerly initialize providers by watching them.    // By using "watch", the provider will stay alive and not be disposed.    ref.watch(myProvider);    return child;  }}
+void main() {
+  runApp(ProviderScope(child: MyApp()));
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return const _EagerInitialization(
+      // TODO: Render your app here
+      child: MaterialApp(),
+    );
+  }
+}
+
+class _EagerInitialization extends ConsumerWidget {
+  const _EagerInitialization({required this.child});
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Eagerly initialize providers by watching them.
+    // By using "watch", the provider will stay alive and not be disposed.
+    ref.watch(myProvider);
+    return child;
+  }
+}
 ```
 
 示例 2 (dart):
 ```dart
-class _EagerInitialization extends ConsumerWidget {  const _EagerInitialization({required this.child});  final Widget child;  @override  Widget build(BuildContext context, WidgetRef ref) {    final result = ref.watch(myProvider);    // Handle error states and loading states    if (result.isLoading) {      return const CircularProgressIndicator();    } else if (result.hasError) {      return const Text('Oopsy!');    }    return child;  }}
+class _EagerInitialization extends ConsumerWidget {
+  const _EagerInitialization({required this.child});
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final result = ref.watch(myProvider);
+    // Handle error states and loading states
+    if (result.isLoading) {
+      return const CircularProgressIndicator();
+    } else if (result.hasError) {
+      return const Text('Oopsy!');
+    }
+    return child;
+  }
+}
 ```
 
 示例 3 (dart):
 ```dart
-// An eagerly initialized provider.final exampleProvider = FutureProvider<String>((ref) async => 'Hello world');class MyConsumer extends ConsumerWidget {  @override  Widget build(BuildContext context, WidgetRef ref) {    final result = ref.watch(exampleProvider);    /// If the provider was correctly eagerly initialized, then we can    /// directly read the data with "requireValue".    return Text(result.requireValue);  }}
+// An eagerly initialized provider.
+final exampleProvider = FutureProvider<String>((ref) async => 'Hello world');
+
+class MyConsumer extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final result = ref.watch(exampleProvider);
+
+    /// If the provider was correctly eagerly initialized, then we can
+    /// directly read the data with "requireValue".
+    return Text(result.requireValue);
+  }
+}
 ```
 
 示例 4 (dart):
 ```dart
-// An eagerly initialized provider.@riverpodFuture<String> example(Ref ref) async => 'Hello world';class MyConsumer extends ConsumerWidget {  @override  Widget build(BuildContext context, WidgetRef ref) {    final result = ref.watch(exampleProvider);    /// If the provider was correctly eagerly initialized, then we can    /// directly read the data with "requireValue".    return Text(result.requireValue);  }}
+// An eagerly initialized provider.
+@riverpod
+Future<String> example(Ref ref) async => 'Hello world';
+
+class MyConsumer extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final result = ref.watch(exampleProvider);
+
+    /// If the provider was correctly eagerly initialized, then we can
+    /// directly read the data with "requireValue".
+    return Text(result.requireValue);
+  }
+}
 ```
 
 ---
@@ -416,22 +578,41 @@ This logic can be tweaked to fit your needs. For example, you could use ref.onCa
 
 示例 1 (dart):
 ```dart
-// Disable automatic disposal@Riverpod(keepAlive: true)String helloWorld(Ref ref) => 'Hello world!';
+// Disable automatic disposal
+@Riverpod(keepAlive: true)
+String helloWorld(Ref ref) => 'Hello world!';
 ```
 
 示例 2 (dart):
 ```dart
-final helloWorldProvider = Provider<String>(  // Opt-in to automatic disposal  isAutoDispose: true,  (ref) => 'Hello world!',);
+final helloWorldProvider = Provider<String>(
+  // Opt-in to automatic disposal
+  isAutoDispose: true,
+  (ref) => 'Hello world!',
+);
 ```
 
 示例 3 (dart):
 ```dart
-final provider = StreamProvider<int>((ref) {  final controller = StreamController<int>();  // When the state is destroyed, we close the StreamController.  ref.onDispose(controller.close);  // TO-DO: Push some values in the StreamController  return controller.stream;});
+final provider = StreamProvider<int>((ref) {
+  final controller = StreamController<int>();
+  // When the state is destroyed, we close the StreamController.
+  ref.onDispose(controller.close);
+  // TO-DO: Push some values in the StreamController
+  return controller.stream;
+});
 ```
 
 示例 4 (dart):
 ```dart
-@riverpodStream<int> example(Ref ref) {  final controller = StreamController<int>();  // When the state is destroyed, we close the StreamController.  ref.onDispose(controller.close);  // TO-DO: Push some values in the StreamController  return controller.stream;}
+@riverpod
+Stream<int> example(Ref ref) {
+  final controller = StreamController<int>();
+  // When the state is destroyed, we close the StreamController.
+  ref.onDispose(controller.close);
+  // TO-DO: Push some values in the StreamController
+  return controller.stream;
+}
 ```
 
 ---
@@ -568,22 +749,39 @@ As example, consider a helloWorldProvider that returns a simple string. You coul
 
 示例 1 (dart):
 ```dart
-Future<User> fetchUser() async {  final response = await http.get('https://api.example.com/user/123');  return User.fromJson(response.body);}
+Future<User> fetchUser() async {
+  final response = await http.get('https://api.example.com/user/123');
+  return User.fromJson(response.body);
+}
 ```
 
 示例 2 (dart):
 ```dart
-// The equivalent of our fetchUser function, but the result is cached.// Using userProvider multiple times will return the same value.final userProvider = FutureProvider<User>((ref) async {  final response = await http.get('https://api.example.com/user/123');  return User.fromJson(response.body);});
+// The equivalent of our fetchUser function, but the result is cached.
+// Using userProvider multiple times will return the same value.
+final userProvider = FutureProvider<User>((ref) async {
+  final response = await http.get('https://api.example.com/user/123');
+  return User.fromJson(response.body);
+});
 ```
 
 示例 3 (dart):
 ```dart
-// The equivalent of our fetchUser function, but the result is cached.// This will generate a "userProvider". Using it multiple times will// return the same value.@riverpodFuture<User> user(Ref ref) async {  final response = await http.get('https://api.example.com/user/123');  return User.fromJson(response.body);}
+// The equivalent of our fetchUser function, but the result is cached.
+// This will generate a "userProvider". Using it multiple times will
+// return the same value.
+@riverpod
+Future<User> user(Ref ref) async {
+  final response = await http.get('https://api.example.com/user/123');
+  return User.fromJson(response.body);
+}
 ```
 
 示例 4 (dart):
 ```dart
-int synchronous() => 0;Future<int> future() async => 0;Stream<int> stream() => Stream.value(0);
+int synchronous() => 0;
+Future<int> future() async => 0;
+Stream<int> stream() => Stream.value(0);
 ```
 
 ---
@@ -669,7 +867,10 @@ The solution is to, like with BuildContext, check mounted before using ref:
 
 示例 1 (dart):
 ```dart
-T refresh<T>(provider) {  invalidate(provider);  return read(provider);}
+T refresh<T>(provider) {
+  invalidate(provider);
+  return read(provider);
+}
 ```
 
 示例 2 (dart):
@@ -679,12 +880,21 @@ ref.read(yourNotifierProvider.notifier).yourMethod();
 
 示例 3 (dart):
 ```dart
-ElevatedButton(  onPressed: () async {    await future;    ref.read(...); // May throw "Using "ref" when a widget is about to or has been unmounted is unsafe."  })
+ElevatedButton(
+onPressed: () async {
+  await future;
+  ref.read(...); // May throw "Using "ref" when a widget is about to or has been unmounted is unsafe."
+})
 ```
 
 示例 4 (dart):
 ```dart
-ElevatedButton(  onPressed: () async {    await future;    if (!context.mounted) return;    ref.read(...); // No longer throws  })
+ElevatedButton(
+onPressed: () async {
+  await future;
+  if (!context.mounted) return;
+  ref.read(...); // No longer throws
+})
 ```
 
 ---
@@ -789,22 +999,61 @@ Riverpod is overall better designed and could lead to drastic simplifications of
 
 示例 1 (dart):
 ```dart
-final itemsProvider = Provider.autoDispose(  (ref) => <Item>[], // ...);final evenItemsProvider = Provider.autoDispose((ref) {  final items = ref.watch(itemsProvider);  return [...items.whereIndexed((index, element) => index.isEven)];});
+final itemsProvider = Provider.autoDispose(
+(ref) => <Item>[], // ...);
+final evenItemsProvider = Provider.autoDispose((ref) {
+  final items = ref.watch(itemsProvider);
+  return [...items.whereIndexed((index, element) => index.isEven)];});
 ```
 
 示例 2 (dart):
 ```dart
-@riverpodList<Item> items(Ref ref) {  return []; // ...}@riverpodList<Item> evenItems(Ref ref) {  final items = ref.watch(itemsProvider);  return [...items.whereIndexed((index, element) => index.isEven)];}
+@riverpod
+List<Item> items(Ref ref) {
+  return []; // ...}
+
+  @riverpod
+  List<Item> evenItems(Ref ref) {
+    final items = ref.watch(itemsProvider);
+    return [...items.whereIndexed((index, element) => index.isEven)];}
 ```
 
 示例 3 (dart):
 ```dart
-final itemsApiProvider = FutureProvider.autoDispose((ref) async {  final client = Dio();  final result = await client.get<List<dynamic>>('your-favorite-api');  final parsed = [...result.data!.map((e) => Item.fromJson(e as Json))];  return parsed;});final evenItemsProvider = Provider.autoDispose((ref) {  final asyncValue = ref.watch(itemsApiProvider);  if (asyncValue.isLoading) return <Item>[];  if (asyncValue.hasError) return const [Item(id: -1)];  final items = asyncValue.requireValue;  return [...items.whereIndexed((index, element) => index.isEven)];});
+final itemsApiProvider = FutureProvider.autoDispose((ref) async {
+  final client = Dio();
+  final result = await client.get<List<dynamic>>('your-favorite-api');
+  final parsed = [...result.data!.map((e) => Item.fromJson(e as Json))];
+  return parsed;
+});
+
+final evenItemsProvider = Provider.autoDispose((ref) {
+  final asyncValue = ref.watch(itemsApiProvider);
+  if (asyncValue.isLoading) return <Item>[];
+  if (asyncValue.hasError) return const [Item(id: -1)];
+  final items = asyncValue.requireValue;
+  return [...items.whereIndexed((index, element) => index.isEven)];
+});
 ```
 
 示例 4 (dart):
 ```dart
-@riverpodFuture<List<Item>> itemsApi(Ref ref) async {  final client = Dio();  final result = await client.get<List<dynamic>>('your-favorite-api');  final parsed = [...result.data!.map((e) => Item.fromJson(e as Json))];  return parsed;}@riverpodList<Item> evenItems(Ref ref) {  final asyncValue = ref.watch(itemsApiProvider);  if (asyncValue.isReloading) return [];  if (asyncValue.hasError) return const [Item(id: -1)];  final items = asyncValue.requireValue;  return [...items.whereIndexed((index, element) => index.isEven)];}
+@riverpod
+Future<List<Item>> itemsApi(Ref ref) async {
+  final client = Dio();
+  final result = await client.get<List<dynamic>>('your-favorite-api');
+  final parsed = [...result.data!.map((e) => Item.fromJson(e as Json))];
+  return parsed;
+}
+
+@riverpod
+List<Item> evenItems(Ref ref) {
+  final asyncValue = ref.watch(itemsApiProvider);
+  if (asyncValue.isReloading) return [];
+  if (asyncValue.hasError) return const [Item(id: -1)];
+  final items = asyncValue.requireValue;
+  return [...items.whereIndexed((index, element) => index.isEven)];
+}
 ```
 
 ---
@@ -846,17 +1095,51 @@ To enable them in your IDE, see Getting started
 
 示例 1 (dart):
 ```dart
-// We subclass StatelessWidget as usualclass MyWidget extends StatelessWidget {  @override  Widget build(BuildContext context) {    // A FutureBuilder-like widget    return Consumer(      // The "builder" callback gives us a "ref" parameter      builder: (context, ref, _) {        // We can use that "ref" to listen to providers        final value = ref.watch(myProvider);        return Text(value.toString());      },    );  }}
+// We sub
+class StatelessWidget as usualclass MyWidget extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    // A FutureBuilder-like widget
+    return Consumer(
+    // The "builder" callback gives us a "ref" parameter
+    builder: (context, ref, _) {
+      // We can use that "ref" to listen to providers
+      final value = ref.watch(myProvider);
+      return Text(value.toString());
+    },
+    );
+  }}
 ```
 
 示例 2 (dart):
 ```dart
-// We subclass ConsumerWidget instead of StatelessWidgetclass MyWidget extends ConsumerWidget {  // "build" receives an extra parameter  @override  Widget build(BuildContext context, WidgetRef ref) {    // We can use that "ref" to listen to providers    final value = ref.watch(myProvider);    return Text(value.toString());  }}
+// We sub
+class ConsumerWidget instead of StatelessWidgetclass MyWidget extends ConsumerWidget {
+  // "build" receives an extra parameter
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // We can use that "ref" to listen to providers
+    final value = ref.watch(myProvider);
+    return Text(value.toString());
+  }}
 ```
 
 示例 3 (dart):
 ```dart
-// We subclass ConsumerStatefulWidget instead of StatefulWidgetclass MyWidget extends ConsumerStatefulWidget {  @override  ConsumerState<MyWidget> createState() => _MyWidgetState();}// We subclass ConsumerState instead of Stateclass _MyWidgetState extends ConsumerState<MyWidget> {  // A "this.ref" property is available  @override  Widget build(BuildContext context) {    // We can use that "ref" to listen to providers    final value = ref.watch(myProvider);    return Text(value.toString());  }}
+// We sub
+class ConsumerStatefulWidget instead of StatefulWidgetclass MyWidget extends ConsumerStatefulWidget {
+  @override
+  ConsumerState<MyWidget> createState() => _MyWidgetState();
+}
+// We sub
+class ConsumerState instead of Stateclass _MyWidgetState extends ConsumerState<MyWidget> {
+  // A "this.ref" property is available
+  @override
+  Widget build(BuildContext context) {
+    // We can use that "ref" to listen to providers
+    final value = ref.watch(myProvider);
+    return Text(value.toString());
+  }}
 ```
 
 ---
@@ -892,11 +1175,38 @@ This happens because Dart updates objects by "reference". If you want to change 
 
 示例 1 (dart):
 ```dart
-// A basic logger, which logs any state changes.final class Logger extends ProviderObserver {  @override  void didUpdateProvider(    ProviderObserverContext context,    Object? previousValue,    Object? newValue,  ) {    print('''{  "provider": "${context.provider}",  "newValue": "$newValue",  "mutation": "${context.mutation}"}''');  }}void main() {  runApp(    ProviderScope(      // ProviderObservers are used by passing them to ProviderScope/ProviderContainer      observers: [        // Adding ProviderScope enables Riverpod for the entire project        // Adding our Logger to the list of observers        Logger(),      ],      child: const MyApp(),    ),  );}// After this, implement a typical Flutter application
+// A basic logger, which logs any state changes.
+final class Logger extends ProviderObserver {
+  @override
+  void didUpdateProvider(
+    ProviderObserverContext context,
+    Object? previousValue,
+    Object? newValue,
+  ) {
+    print('''{
+      "provider": "${context.provider}",
+      "newValue": "$newValue",
+      "mutation": "${context.mutation}"}''');
+  }
+}
+
+void main() {
+  runApp(
+    ProviderScope(
+      // ProviderObservers are used by passing them to ProviderScope/ProviderContainer
+      observers: [
+        // Adding ProviderScope enables Riverpod for the entire project
+        // Adding our Logger to the list of observers
+        Logger(),
+      ],
+      child: const MyApp(),
+    ),
+  );
+} // After this, implement a typical Flutter application
 ```
 
-示例 2 (dart):
-```dart
+示例 2 (json):
+```json
 {  "provider": "Provider<int>",  "newValue": "1"}
 ```
 
@@ -905,8 +1215,8 @@ This happens because Dart updates objects by "reference". If you want to change 
 final myProvider = Provider<int>((ref) => 0, name: 'MyProvider');
 ```
 
-示例 4 (dart):
-```dart
+示例 4 (json):
+```json
 {  "provider": "MyProvider",  "newValue": "1"}
 ```
 
@@ -990,17 +1300,37 @@ Then, to use your notifier you could do:
 
 示例 1 (dart):
 ```dart
-void main() {  test('Some description', () {    // Create a ProviderContainer for this test.    // DO NOT share ProviderContainers between tests.    final container = ProviderContainer.test();    // TODO: use the container to test your application.    expect(      container.read(provider),      equals('some value'),    );  });}
+void main() {
+  test('Some description', () {
+    // Create a ProviderContainer for this test.
+    // DO NOT share ProviderContainers between tests.
+    final container = ProviderContainer.test();
+    // TODO: use the container to test your application.
+    expect(container.read(provider), equals('some value'));
+  });
+}
 ```
 
 示例 2 (dart):
 ```dart
-final subscription = container.listen<String>(provider, (_, _) {});expect(  // Equivalent to `container.read(provider)`  // But the provider will not be disposed unless "subscription" is disposed.  subscription.read(),  'Some value',);
+final subscription = container.listen<String>(provider, (_, _) {});
+expect(
+  // Equivalent to `container.read(provider)`
+  // But the provider will not be disposed unless "subscription" is disposed.
+  subscription.read(),
+  'Some value',
+);
 ```
 
 示例 3 (dart):
 ```dart
-void main() {  testWidgets('Some description', (tester) async {    await tester.pumpWidget(      const ProviderScope(child: YourWidgetYouWantToTest()),    );  });}
+void main() {
+  testWidgets('Some description', (tester) async {
+    await tester.pumpWidget(
+      const ProviderScope(child: YourWidgetYouWantToTest()),
+    );
+  });
+}
 ```
 
 示例 4 (dart):
@@ -1136,12 +1466,30 @@ In many ways, passing parameters to providers is equivalent to a Map key. If the
 
 示例 1 (dart):
 ```dart
-class Counter extends ChangeNotifier { ...}void main() {  runApp(    MultiProvider(      providers: [        ChangeNotifierProvider<Counter>(create: (context) => Counter()),      ],      child: MyApp(),    )  );}
+class Counter extends ChangeNotifier { ...}
+
+void main() {
+  runApp(
+  MultiProvider(
+  providers: [
+  ChangeNotifierProvider<Counter>(create: (context) => Counter()),
+  ],
+  child: MyApp(),
+  )
+  );}
 ```
 
 示例 2 (dart):
 ```dart
-// Providers are now top-level variablesfinal counterProvider = ChangeNotifierProvider<Counter>((ref) => Counter());void main() {  runApp(    // This widget enables Riverpod for the entire project    ProviderScope(      child: MyApp(),    ),  );}
+// Providers are now top-level variables
+final counterProvider = ChangeNotifierProvider<Counter>((ref) => Counter());
+
+void main() {
+  runApp(
+    // This widget enables Riverpod for the entire project
+    ProviderScope(child: MyApp()),
+  );
+}
 ```
 
 示例 3 (dart):
@@ -1151,7 +1499,12 @@ Provider<Model>(...);
 
 示例 4 (dart):
 ```dart
-class Example extends StatelessWidget {  @override  Widget build(BuildContext context) {    Model model = context.watch<Model>();  }}
+class Example extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    Model model = context.watch<Model>();
+  }
+}
 ```
 
 ---
@@ -1175,12 +1528,30 @@ A typical override looks like this:
 
 示例 1 (dart):
 ```dart
-void main() {  runApp(    ProviderScope(      overrides: [        // Your overrides are defined here.        // The following shows how to override a "counter provider"        // to use a different initial value.        counterProvider.overrideWith((ref) => 42),      ]    )  );}
+void main() {
+  runApp(
+    ProviderScope(
+      overrides: [
+        // Your overrides are defined here.
+        // The following shows how to override a "counter provider"
+        // to use a different initial value.
+        counterProvider.overrideWith((ref) => 42),
+      ],
+    ),
+  );
+}
 ```
 
 示例 2 (dart):
 ```dart
-final container = ProviderContainer(  overrides: [    // Your overrides are defined here.    // The following shows how to override a "counter provider"    // to use a different initial value.    counterProvider.overrideWith((ref) => 42),  ]);
+final container = ProviderContainer(
+  overrides: [
+    // Your overrides are defined here.
+    // The following shows how to override a "counter provider"
+    // to use a different initial value.
+    counterProvider.overrideWith((ref) => 42),
+  ],
+);
 ```
 
 ---
@@ -1222,22 +1593,72 @@ For this purpose, you can instead use selectAsync. It is unique to asynchronous 
 
 示例 1 (dart):
 ```dart
-class User {  late String firstName, lastName;}final provider = Provider(  (ref) => User()    ..firstName = 'John'    ..lastName = 'Doe',);class ConsumerExample extends ConsumerWidget {  @override  Widget build(BuildContext context, WidgetRef ref) {    // Instead of writing:    // String name = ref.watch(provider).firstName!;    // We can write:    String name = ref.watch(provider.select((it) => it.firstName));    // This will cause the widget to only listen to changes on "firstName".    return Text('Hello $name');  }}
+class User {
+  late String firstName, lastName;
+}
+
+final provider = Provider(
+  (ref) => User()
+    ..firstName = 'John'
+    ..lastName = 'Doe',
+);
+
+class ConsumerExample extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Instead of writing:
+    // String name = ref.watch(provider).firstName!;
+    // We can write:
+    String name = ref.watch(provider.select((it) => it.firstName));
+    // This will cause the widget to only listen to changes on "firstName".
+    return Text('Hello $name');
+  }
+}
 ```
 
 示例 2 (dart):
 ```dart
-class User {  late String firstName, lastName;}@riverpodUser example(Ref ref) => User()  ..firstName = 'John'  ..lastName = 'Doe';class ConsumerExample extends ConsumerWidget {  @override  Widget build(BuildContext context, WidgetRef ref) {    // Instead of writing:    // String name = ref.watch(provider).firstName!;    // We can write:    String name = ref.watch(exampleProvider.select((it) => it.firstName));    // This will cause the widget to only listen to changes on "firstName".    return Text('Hello $name');  }}
+class User {
+  late String firstName, lastName;
+}
+
+@riverpod
+User example(Ref ref) => User()
+  ..firstName = 'John'
+  ..lastName = 'Doe';
+
+class ConsumerExample extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Instead of writing:
+    // String name = ref.watch(provider).firstName!;
+    // We can write:
+    String name = ref.watch(exampleProvider.select((it) => it.firstName));
+    // This will cause the widget to only listen to changes on "firstName".
+    return Text('Hello $name');
+  }
+}
 ```
 
 示例 3 (dart):
 ```dart
-final provider = FutureProvider((ref) async {  // Wait for a user to be available, and listen to only the "firstName" property  final firstName = await ref.watch(    userProvider.selectAsync((it) => it.firstName),  );  // TODO use "firstName" to fetch something else});
+final provider = FutureProvider((ref) async {
+  // Wait for a user to be available, and listen to only the "firstName" property
+  final firstName = await ref.watch(
+  userProvider.selectAsync((it) => it.firstName),
+  );
+  // TODO use "firstName" to fetch something else});
 ```
 
 示例 4 (dart):
 ```dart
-@riverpodObject? example(Ref ref) async {  // Wait for a user to be available, and listen to only the "firstName" property  final firstName = await ref.watch(    userProvider.selectAsync((it) => it.firstName),  );  // TODO use "firstName" to fetch something else}
+@riverpod
+Object? example(Ref ref) async {
+  // Wait for a user to be available, and listen to only the "firstName" property
+  final firstName = await ref.watch(
+  userProvider.selectAsync((it) => it.firstName),
+  );
+  // TODO use "firstName" to fetch something else}
 ```
 
 ---
@@ -1290,22 +1711,75 @@ In that scenario, you have two options:
 
 示例 1 (dart):
 ```dart
-// When not using code-generation, providers can use ".family".// This adds one generic parameter corresponding to the type of the parameter.// The initialization function then receives the parameter.final userProvider = FutureProvider.autoDispose.family<User, String>((ref, id) async {  final dio = Dio();  final response = await dio.get('https://api.example.com/users/$id');  return User.fromJson(response.data);});
+// When not using code-generation, providers can use ".family".
+// This adds one generic parameter corresponding to the type of the parameter.
+// The initialization function then receives the parameter.
+final userProvider = FutureProvider.autoDispose.family<User, String>((
+  ref,
+  id,
+) async {
+  final dio = Dio();
+  final response = await dio.get('https://api.example.com/users/$id');
+  return User.fromJson(response.data);
+});
 ```
 
 示例 2 (dart):
 ```dart
-@riverpodFuture<User> user(  Ref ref,  // When using code-generation, providers can receive any number of parameters.  // They can be both positional/named and required/optional.  String id,) async {  final dio = Dio();  final response = await dio.get('https://api.example.com/users/$id');  return User.fromJson(response.data);}
+@riverpod
+Future<User> user(
+  Ref ref,
+  // When using code-generation, providers can receive any number of parameters.
+  // They can be both positional/named and required/optional.
+  String id,
+) async {
+  final dio = Dio();
+  final response = await dio.get('https://api.example.com/users/$id');
+  return User.fromJson(response.data);
+}
 ```
 
 示例 3 (dart):
 ```dart
-// With notifiers providers, we also use ".family" and receive and extra// generic argument.// The main difference is that the associated Notifier needs to define// a constructor+field to accept the argument.final userProvider = AsyncNotifierProvider.autoDispose.family<UserNotifier, User, String>(  UserNotifier.new,);class UserNotifier extends AsyncNotifier<User> {  // We store the argument in a field, so that we can use it  UserNotifier(this.id);  final String id;  @override  Future<User> build() async {    final dio = Dio();    final response = await dio.get('https://api.example.com/users/$id');    return User.fromJson(response.data);  }}
+// With notifier providers, we also use ".family" and receive an extra
+// generic argument.
+// The main difference is that the associated Notifier needs to define
+// a constructor + field to accept the argument.
+final userProvider = AsyncNotifierProvider.autoDispose
+    .family<UserNotifier, User, String>(UserNotifier.new);
+
+class UserNotifier extends AsyncNotifier<User> {
+  // We store the argument in a field, so that we can use it.
+  UserNotifier(this.id);
+  final String id;
+
+  @override
+  Future<User> build() async {
+    final dio = Dio();
+    final response = await dio.get('https://api.example.com/users/$id');
+    return User.fromJson(response.data);
+  }
+}
 ```
 
 示例 4 (dart):
 ```dart
-@riverpodclass UserNotifier extends _$UserNotifier {  @override  Future<User> build(    // When using code-generation, Notifiers can define parameters on their    // "build" method. Any number of parameter can be defined.    String id,  ) async {    final dio = Dio();    final response = await dio.get('https://api.example.com/users/$id');    // The generated class will naturally have access to the parameters    // passed to the "build" method in "this":    print(this.id);    return User.fromJson(response.data);  }}
+@riverpod
+class UserNotifier extends _$UserNotifier {
+  @override
+  Future<User> build(
+    // When using code-generation, Notifiers can define parameters on their
+    // "build" method. Any number of parameters can be defined.
+    String id,
+  ) async {
+    final dio = Dio();
+    final response = await dio.get('https://api.example.com/users/$id');
+    // The generated class will naturally have access to the parameters
+    // passed to the "build" method in "this":
+    print(this.id);
+    return User.fromJson(response.data);
+  }
+}
 ```
 
 ---
@@ -1342,12 +1816,16 @@ To set a scoped provider, you can use Provider overrides. A typical example is t
 
 示例 1 (dart):
 ```dart
-final currentItemIdProvider = Provider<String?>(  dependencies: const [],  (ref) => null,);
+final currentItemIdProvider = Provider<String?>(
+  dependencies: const [],
+  (ref) => null,
+);
 ```
 
 示例 2 (dart):
 ```dart
-@Riverpod(dependencies: [])String? currentItemId(Ref ref) => null;
+@Riverpod(dependencies: [])
+String? currentItemId(Ref ref) => null;
 ```
 
 示例 3 (dart):
@@ -1357,7 +1835,15 @@ final currentItemId = ref.watch(currentItemIdProvider);
 
 示例 4 (dart):
 ```dart
-final currentItemProvider = FutureProvider<Item?>(  dependencies: [currentItemIdProvider],  (ref) async {    final currentItemId = ref.watch(currentItemIdProvider);    if (currentItemId == null) return null;    // Fetch the item from a database or API    return fetchItem(id: currentItemId);  },);
+final currentItemProvider = FutureProvider<Item?>(
+  dependencies: [currentItemIdProvider],
+  (ref) async {
+    final currentItemId = ref.watch(currentItemIdProvider);
+    if (currentItemId == null) return null;
+    // Fetch the item from a database or API
+    return fetchItem(id: currentItemId);
+  },
+);
 ```
 
 ---
@@ -1410,17 +1896,47 @@ Support for Scoping providers. By storing the state of a provider inside a conta
 
 示例 1 (dart):
 ```dart
-import 'package:riverpod/riverpod.dart';void main() {  final container = ProviderContainer();  try {    final sub = container.listen(counterProvider, (previous, next) {      print('Counter changed from $previous to $next');    });    print('Counter starts at ${sub.read()}');  } finally {    // Dispose the container when done    container.dispose();  }}
+import 'package:riverpod/riverpod.dart';
+
+void main() {
+  final container = ProviderContainer();
+  try {
+    final sub = container.listen(counterProvider, (previous, next) {
+      print('Counter changed from $previous to $next');
+    });
+    print('Counter starts at ${sub.read()}');
+  } finally {
+    // Dispose the container when done
+    container.dispose();
+  }
+}
 ```
 
 示例 2 (dart):
 ```dart
-test('Counter starts at 0 and can be incremented', () {  // No need to dispose the container when the test ends  final container = ProviderContainer.test();  // Use the container to test your providers});
+test('Counter starts at 0 and can be incremented', () {
+  // No need to dispose the container when the test ends
+  final container = ProviderContainer.test();
+  // Use the container to test your providers});
 ```
 
 示例 3 (dart):
 ```dart
-import 'package:flutter/material.dart';import 'package:hooks_riverpod/hooks_riverpod.dart';void main() {  runApp(    ProviderScope(      child: Consumer(        builder: (context, ref, _) {          final counter = ref.watch(counterProvider);          // TODO use "counter"        },      ),    ),  );}
+import 'package:flutter/material.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+
+void main() {
+  runApp(
+    ProviderScope(
+      child: Consumer(
+        builder: (context, ref, _) {
+          final counter = ref.watch(counterProvider);
+          // TODO use "counter"
+        },
+      ),
+    ),
+  );
+}
 ```
 
 示例 4 (dart):
@@ -1522,22 +2038,52 @@ Following this guide, you can migrate towards codegen as a further step forward,
 
 示例 1 (dart):
 ```dart
-// If you have this...class MyNotifier extends ChangeNotifier {  int state = 0;  void increment() {    state++;    notifyListeners();  }}// ... just add this!final myNotifierProvider = ChangeNotifierProvider<MyNotifier>((ref) {  return MyNotifier();});
+// If you have this...
+class MyNotifier extends ChangeNotifier {
+  int state = 0;
+
+  void increment() {
+    state++;
+    notifyListeners();
+  }
+} // ... just add this!
+
+final myNotifierProvider = ChangeNotifierProvider<MyNotifier>((ref) {
+  return MyNotifier();
+});
 ```
 
 示例 2 (dart):
 ```dart
-class MyNotifier extends Notifier<int> {  @override  int build() => 0;  void increment() => state++;}final myNotifierProvider = NotifierProvider<MyNotifier, int>(MyNotifier.new);
+class MyNotifier extends Notifier<int> {
+  @override
+  int build() => 0;
+
+  void increment() => state++;
+}
+
+final myNotifierProvider = NotifierProvider<MyNotifier, int>(MyNotifier.new);
 ```
 
 示例 3 (dart):
 ```dart
-extension ChangeNotifierWithCodeGenExtension on Ref {  T listenAndDisposeChangeNotifier<T extends ChangeNotifier>(T notifier) {    notifier.addListener(notifyListeners);    onDispose(() => notifier.removeListener(notifyListeners));    onDispose(notifier.dispose);    return notifier;  }}
+extension ChangeNotifierWithCodeGenExtension on Ref {
+  T listenAndDisposeChangeNotifier<T extends ChangeNotifier>(T notifier) {
+    notifier.addListener(notifyListeners);
+    onDispose(() => notifier.removeListener(notifyListeners));
+    onDispose(notifier.dispose);
+    return notifier;
+  }
+}
 ```
 
 示例 4 (dart):
 ```dart
-// ignore_for_file: unsupported_provider_value@riverpodMyNotifier example(Ref ref) {  return ref.listenAndDisposeChangeNotifier(MyNotifier());}
+// ignore_for_file: unsupported_provider_value
+@riverpod
+MyNotifier example(Ref ref) {
+  return ref.listenAndDisposeChangeNotifier(MyNotifier());
+}
 ```
 
 ---

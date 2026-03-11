@@ -105,9 +105,7 @@ final helloWorldProvider = Provider<String>((ref) => 'Hello world');
 void main() {
   runApp(
     // 2. 用 ProviderScope 包裹应用（必需）
-    const ProviderScope(
-      child: MyApp(),
-    ),
+    const ProviderScope(child: MyApp()),
   );
 }
 
@@ -123,12 +121,7 @@ class MyApp extends ConsumerWidget {
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(title: const Text('Riverpod Example')),
-        body: Center(
-          child: Text(
-            value,
-            style: const TextStyle(fontSize: 24),
-          ),
-        ),
+        body: Center(child: Text(value, style: const TextStyle(fontSize: 24))),
       ),
     );
   }
@@ -214,7 +207,9 @@ final messagesProvider = StreamProvider<List<Message>>((ref) {
   return firestore
       .collection('messages')
       .snapshots()
-      .map((snapshot) => snapshot.docs.map((doc) => Message.fromDoc(doc)).toList());
+      .map(
+        (snapshot) => snapshot.docs.map((doc) => Message.fromDoc(doc)).toList(),
+      );
 });
 
 // 代码生成
@@ -223,7 +218,9 @@ Stream<List<Message>> messages(Ref ref) {
   return firestore
       .collection('messages')
       .snapshots()
-      .map((snapshot) => snapshot.docs.map((doc) => Message.fromDoc(doc)).toList());
+      .map(
+        (snapshot) => snapshot.docs.map((doc) => Message.fromDoc(doc)).toList(),
+      );
 }
 ```
 
@@ -238,7 +235,9 @@ class CounterNotifier extends Notifier<int> {
   int build() => 0; // 初始状态
 
   void increment() => state++;
+
   void decrement() => state--;
+
   void reset() => state = 0;
 }
 
@@ -253,7 +252,9 @@ class Counter extends _$Counter {
   int build() => 0; // 初始状态
 
   void increment() => state++;
+
   void decrement() => state--;
+
   void reset() => state = 0;
 }
 
@@ -296,7 +297,7 @@ class TodoList extends _$TodoList {
   Future<void> addTodo(Todo todo) async {
     // 设置为加载状态
     state = const AsyncLoading();
-    
+
     // 执行异步操作
     state = await AsyncValue.guard(() async {
       await saveTodo(todo);
@@ -307,7 +308,7 @@ class TodoList extends _$TodoList {
   // 删除 todo
   Future<void> removeTodo(String id) async {
     state = const AsyncLoading();
-    
+
     state = await AsyncValue.guard(() async {
       await deleteTodo(id);
       return state.value!.where((todo) => todo.id != id).toList();
@@ -347,20 +348,20 @@ class TodoListWidget extends ConsumerWidget {
 
     return switch (todosAsync) {
       AsyncData(:final value) => ListView.builder(
-          itemCount: value.length,
-          itemBuilder: (context, index) {
-            final todo = value[index];
-            return ListTile(
-              title: Text(todo.title),
-              trailing: IconButton(
-                icon: const Icon(Icons.delete),
-                onPressed: () {
-                  ref.read(todoListProvider.notifier).removeTodo(todo.id);
-                },
-              ),
-            );
-          },
-        ),
+        itemCount: value.length,
+        itemBuilder: (context, index) {
+          final todo = value[index];
+          return ListTile(
+            title: Text(todo.title),
+            trailing: IconButton(
+              icon: const Icon(Icons.delete),
+              onPressed: () {
+                ref.read(todoListProvider.notifier).removeTodo(todo.id);
+              },
+            ),
+          );
+        },
+      ),
       AsyncError(:final error) => Text('Error: $error'),
       _ => const CircularProgressIndicator(),
     };
@@ -379,7 +380,7 @@ class MyWidget extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final count = ref.watch(counterProvider);
-    
+
     return Scaffold(
       body: Center(child: Text('Count: $count')),
       floatingActionButton: FloatingActionButton(
@@ -489,10 +490,10 @@ class UserWidget extends ConsumerWidget {
 Widget build(BuildContext context, WidgetRef ref) {
   // 监听整个状态
   final value = ref.watch(myProvider);
-  
+
   // 使用 select 优化：只在特定字段变化时重建
   final name = ref.watch(userProvider.select((user) => user.name));
-  
+
   return Text('Value: $value, Name: $name');
 }
 ```
@@ -507,15 +508,15 @@ Widget build(BuildContext context, WidgetRef ref) {
 
 ```dart
 ElevatedButton(
-  onPressed: () {
-    // 读取当前值
-    final value = ref.read(myProvider);
-    print('Current value: $value');
-    
-    // 调用 notifier 方法
-    ref.read(counterProvider.notifier).increment();
-  },
-  child: const Text('Increment'),
+onPressed: () {
+  // 读取当前值
+  final value = ref.read(myProvider);
+  print('Current value: $value');
+
+  // 调用 notifier 方法
+  ref.read(counterProvider.notifier).increment();
+},
+child: const Text('Increment'),
 )
 ```
 
@@ -531,22 +532,19 @@ ElevatedButton(
 @override
 Widget build(BuildContext context, WidgetRef ref) {
   // 监听状态变化
-  ref.listen<AsyncValue<void>>(
-    myProvider,
-    (previous, next) {
-      // 显示错误提示
-      if (next.hasError) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${next.error}')),
-        );
-      }
-      
-      // 成功后导航
-      if (next.hasValue) {
-        Navigator.of(context).pop();
-      }
-    },
-  );
+  ref.listen<AsyncValue<void>>(myProvider, (previous, next) {
+    // 显示错误提示
+    if (next.hasError) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: ${next.error}')));
+    }
+
+    // 成功后导航
+    if (next.hasValue) {
+      Navigator.of(context).pop();
+    }
+  });
 
   return const MyWidget();
 }
@@ -575,14 +573,14 @@ subscription.close();
 
 ```dart
 ElevatedButton(
-  onPressed: () {
-    // 重置 provider
-    ref.invalidate(myProvider);
-    
-    // 重置并立即获取新值
-    final newValue = ref.refresh(myProvider);
-  },
-  child: const Text('Refresh'),
+onPressed: () {
+  // 重置 provider
+  ref.invalidate(myProvider);
+
+  // 重置并立即获取新值
+  final newValue = ref.refresh(myProvider);
+},
+child: const Text('Refresh'),
 )
 ```
 
@@ -607,10 +605,10 @@ final value = ref.refresh(myProvider);
 @riverpod
 Future<void> example(Ref ref) async {
   await Future.delayed(const Duration(seconds: 2));
-  
+
   // 检查 provider 是否仍然存活
   if (!ref.mounted) return;
-  
+
   // 安全地更新状态
   ref.state = 'Updated';
 }
@@ -653,12 +651,12 @@ final provider = Provider<String>((ref) => 'Hello');
 @riverpod
 Future<String> example(Ref ref) async {
   final response = await http.get(Uri.parse('api/data'));
-  
+
   // 成功后保持存活，避免重复请求
   if (response.statusCode == 200) {
     ref.keepAlive();
   }
-  
+
   return response.body;
 }
 
@@ -666,10 +664,10 @@ Future<String> example(Ref ref) async {
 @riverpod
 Future<String> advanced(Ref ref) async {
   final link = ref.keepAlive();
-  
+
   // 10 秒后恢复自动销毁
   Timer(const Duration(seconds: 10), link.close);
-  
+
   return 'Data';
 }
 ```
@@ -728,7 +726,7 @@ extension CacheForExtension on Ref {
 Future<List<Todo>> todos(Ref ref) async {
   // 缓存 5 分钟
   ref.cacheFor(const Duration(minutes: 5));
-  
+
   return fetchTodos();
 }
 ```
@@ -778,9 +776,7 @@ Future<List<Product>> products(
 }
 
 // 使用
-final products = ref.watch(
-  productsProvider(category: 'electronics', page: 1),
-);
+final products = ref.watch(productsProvider(category: 'electronics', page: 1));
 ```
 
 ### 使用自定义类作为参数
@@ -813,10 +809,7 @@ class ProductFilter {
 
 // 使用自定义类
 @riverpod
-Future<List<Product>> filteredProducts(
-  Ref ref,
-  ProductFilter filter,
-) async {
+Future<List<Product>> filteredProducts(Ref ref, ProductFilter filter) async {
   final response = await http.get(
     Uri.parse(
       'api/products?category=${filter.category}'
@@ -853,8 +846,8 @@ class TodoNotifier extends _$TodoNotifier {
     state = await AsyncValue.guard(() async {
       final todo = state.value!;
       final updated = await updateTodo(
-        todoId, // 使用参数
-        completed: !todo.completed,
+      todoId, // 使用参数
+      completed: !todo.completed,
       );
       return updated;
     });
@@ -878,7 +871,7 @@ void main() {
   test('counter increments', () {
     // 创建测试容器
     final container = ProviderContainer();
-    
+
     // 添加监听器以确保 provider 被正确更新
     addTearDown(container.dispose);
 
@@ -1044,9 +1037,9 @@ Widget build(BuildContext context, WidgetRef ref) {
 #### 2. 在回调中使用 ref.read
 ```dart
 ElevatedButton(
-  // ✅ 正确：在回调中读取和修改状态
-  onPressed: () => ref.read(provider.notifier).doSomething(),
-  child: const Text('Click'),
+// ✅ 正确：在回调中读取和修改状态
+onPressed: () => ref.read(provider.notifier).doSomething(),
+child: const Text('Click'),
 )
 ```
 
@@ -1065,17 +1058,14 @@ Widget build(BuildContext context, WidgetRef ref) {
 @override
 Widget build(BuildContext context, WidgetRef ref) {
   // ✅ 正确：监听状态变化并显示 SnackBar
-  ref.listen<AsyncValue<void>>(
-    submitProvider,
-    (previous, next) {
-      if (next.hasError) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${next.error}')),
-        );
-      }
-    },
-  );
-  
+  ref.listen<AsyncValue<void>>(submitProvider, (previous, next) {
+    if (next.hasError) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: ${next.error}')));
+    }
+  });
+
   return const MyForm();
 }
 ```
@@ -1106,12 +1096,12 @@ Widget build(BuildContext context, WidgetRef ref) {
 #### 2. 不要在回调中使用 ref.watch
 ```dart
 ElevatedButton(
-  // ❌ 错误：会导致不必要的重建
-  onPressed: () {
-    final value = ref.watch(provider);
-    print(value);
-  },
-  child: const Text('Click'),
+// ❌ 错误：会导致不必要的重建
+onPressed: () {
+  final value = ref.watch(provider);
+  print(value);
+},
+child: const Text('Click'),
 )
 ```
 
@@ -1174,15 +1164,15 @@ final lastName = ref.watch(userProvider.select((user) => user.lastName));
 #### 2. 使用 Consumer 局部重建
 ```dart
 Column(
-  children: [
-    const Text('Static content'), // 不会重建
-    Consumer(
-      builder: (context, ref, child) {
-        final count = ref.watch(counterProvider);
-        return Text('Count: $count'); // 只有这里重建
-      },
-    ),
-  ],
+children: [
+const Text('Static content'), // 不会重建
+Consumer(
+builder: (context, ref, child) {
+  final count = ref.watch(counterProvider);
+  return Text('Count: $count'); // 只有这里重建
+},
+),
+],
 )
 ```
 
@@ -1231,8 +1221,8 @@ String example(Ref ref) => 'Hello';
 // v3 新增：失败时自动重试
 // 全局禁用
 ProviderScope(
-  retry: (retryCount, error) => null,
-  child: MyApp(),
+retry: (retryCount, error) => null,
+child: MyApp(),
 )
 
 // 单个 provider 禁用
@@ -1330,8 +1320,8 @@ class _MyWidgetState extends ConsumerState<MyWidget> {
 ### 2. 如何处理下拉刷新？
 ```dart
 RefreshIndicator(
-  onRefresh: () => ref.refresh(myProvider.future),
-  child: ListView(...),
+onRefresh: () => ref.refresh(myProvider.future),
+child: ListView(...),
 )
 ```
 
@@ -1362,7 +1352,7 @@ class PostList extends _$PostList {
   Future<void> loadMore() async {
     final currentPosts = state.value ?? [];
     final nextPage = (currentPosts.length / 20).ceil() + 1;
-    
+
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
       final newPosts = await fetchPosts(page: nextPage);
@@ -1387,13 +1377,13 @@ class SearchQuery extends _$SearchQuery {
 @riverpod
 Future<List<Result>> searchResults(Ref ref) async {
   final query = ref.watch(searchQueryProvider);
-  
+
   // 防抖：等待 500ms
   await Future.delayed(const Duration(milliseconds: 500));
-  
+
   // 检查是否仍然存活
   if (!ref.mounted) return [];
-  
+
   return performSearch(query);
 }
 ```
@@ -1408,6 +1398,7 @@ class LoadingState extends _$LoadingState {
   bool build() => false;
 
   void show() => state = true;
+
   void hide() => state = false;
 }
 
@@ -1436,7 +1427,7 @@ Future<Data> data(Ref ref) async {
 ```dart
 Future<void> toggleLike(String postId) async {
   final previousState = state;
-  
+
   // 立即更新 UI
   state = AsyncData(
     state.value!.map((post) {
@@ -1478,6 +1469,6 @@ Future<void> toggleLike(String postId) async {
 
 ---
 
-**版本**: 3.1.0  
-**最后更新**: 2024-03  
+**版本**: 3.1.0
+**最后更新**: 2024-03
 **维护者**: Remi Rousselet (@rrousselGit)

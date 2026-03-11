@@ -56,24 +56,32 @@ Riverpod_lint 使用 analysis_server_plugin 实现。因此，它通过 analysis
 
 **示例:**
 
-示例 1 (dart):
-```dart
+示例 1 (bash):
+```bash
 flutter pub add flutter_riverpod
 ```
 
-示例 2 (dart):
-```dart
-flutter pub add hooks_riverpodflutter pub add flutter_hooks
+示例 2 (bash):
+```bash
+flutter pub add hooks_riverpod
+flutter pub add flutter_hooks
 ```
 
-示例 3 (dart):
-```dart
-flutter pub add flutter_riverpodflutter pub add riverpod_annotationflutter pub add dev:riverpod_generatorflutter pub add dev:build_runner
+示例 3 (bash):
+```bash
+flutter pub add flutter_riverpod
+flutter pub add riverpod_annotation
+flutter pub add dev:riverpod_generator
+flutter pub add dev:build_runner
 ```
 
-示例 4 (dart):
-```dart
-flutter pub add hooks_riverpodflutter pub add flutter_hooksflutter pub add riverpod_annotationflutter pub add dev:riverpod_generatorflutter pub add dev:build_runner
+示例 4 (bash):
+```bash
+flutter pub add hooks_riverpod
+flutter pub add flutter_hooks
+flutter pub add riverpod_annotation
+flutter pub add dev:riverpod_generator
+flutter pub add dev:build_runner
 ```
 
 ---

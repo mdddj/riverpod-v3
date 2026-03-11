@@ -61,24 +61,28 @@ Alternatively you can use the new StateProvider.state to keep the old behavior.
 
 **示例:**
 
-示例 1 (unknown):
-```unknown
+示例 1 (bash):
+```bash
 dart pub global activate riverpod_cli
 ```
 
-示例 2 (unknown):
-```unknown
+示例 2 (bash):
+```bash
 riverpod --help
 ```
 
-示例 3 (unknown):
-```unknown
+示例 3 (bash):
+```bash
 riverpod migrate
 ```
 
-示例 4 (unknown):
-```unknown
--Widget build(BuildContext context, ScopedReader watch) {+Widget build(BuildContext context, Widget ref) {-  MyModel state = watch(provider);+  MyModel state = ref.watch(provider);}Accept change (y = yes, n = no [default], A = yes to all, q = quit)?
+示例 4 (diff):
+```diff
+-Widget build(BuildContext context, ScopedReader watch) {
++Widget build(BuildContext context, Widget ref) {
+-  MyModel state = watch(provider);
++  MyModel state = ref.watch(provider);}
+Accept change (y = yes, n = no [default], A = yes to all, q = quit)?
 ```
 
 ---
@@ -120,22 +124,32 @@ To accept the change, simply press y. Otherwise to reject it, press n.
 
 示例 1 (dart):
 ```dart
-class MyModel {}class MyStateNotifier extends StateNotifier<MyModel> {  MyStateNotifier(): super(MyModel());}
+class MyModel {}
+
+class MyStateNotifier extends StateNotifier<MyModel> {
+  MyStateNotifier() : super(MyModel());
+}
 ```
 
 示例 2 (dart):
 ```dart
-final provider = StateNotifierProvider<MyStateNotifier>((ref) {  return MyStateNotifier();});
+final provider = StateNotifierProvider<MyStateNotifier>((ref) {
+  return MyStateNotifier();
+});
 ```
 
 示例 3 (dart):
 ```dart
-final provider = StateNotifierProvider<MyStateNotifier, MyModel>((ref) {  return MyStateNotifier();});
+final provider = StateNotifierProvider<MyStateNotifier, MyModel>((ref) {
+  return MyStateNotifier();
+});
 ```
 
 示例 4 (dart):
 ```dart
-Widget build(BuildContext context, ScopedReader watch) {  MyStateNotifier notifier = watch(provider);}
+Widget build(BuildContext context, ScopedReader watch) {
+  MyStateNotifier notifier = watch(provider);
+}
 ```
 
 ---
@@ -205,22 +219,92 @@ Let's review the whole migration process applied above, from a operational point
 
 示例 1 (dart):
 ```dart
-class MyChangeNotifier extends ChangeNotifier {  MyChangeNotifier() {    _init();  }  List<Todo> todos = [];  bool isLoading = true;  bool hasError = false;  Future<void> _init() async {    try {      final json = await http.get('api/todos');      todos = [...json.map(Todo.fromJson)];    } on Exception {      hasError = true;    } finally {      isLoading = false;      notifyListeners();    }  }  Future<void> addTodo(int id) async {    isLoading = true;    notifyListeners();    try {      final json = await http.post('api/todos');      todos = [...json.map(Todo.fromJson)];      hasError = false;    } on Exception {      hasError = true;    } finally {      isLoading = false;      notifyListeners();    }  }}final myChangeProvider = ChangeNotifierProvider<MyChangeNotifier>((ref) {  return MyChangeNotifier();});
+class MyChangeNotifier extends ChangeNotifier {
+  MyChangeNotifier() {
+    _init();
+  }
+  List<Todo> todos = [];
+  bool isLoading = true;
+  bool hasError = false;
+  Future<void> _init() async {
+    try {
+      final json = await http.get('api/todos');
+      todos = [...json.map(Todo.fromJson)];
+    } on Exception {
+      hasError = true;
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> addTodo(int id) async {
+    isLoading = true;
+    notifyListeners();
+    try {
+      final json = await http.post('api/todos');
+      todos = [...json.map(Todo.fromJson)];
+      hasError = false;
+    } on Exception {
+      hasError = true;
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+}
+
+final myChangeProvider = ChangeNotifierProvider<MyChangeNotifier>((ref) {
+  return MyChangeNotifier();
+});
 ```
 
 示例 2 (dart):
 ```dart
-class MyNotifier extends AsyncNotifier<List<Todo>> {  @override  FutureOr<List<Todo>> build() {    // TODO ...    return [];  }  Future<void> addTodo(Todo todo) async {    // TODO  }}final myNotifierProvider =    AsyncNotifierProvider.autoDispose<MyNotifier, List<Todo>>(MyNotifier.new);
+class MyNotifier extends AsyncNotifier<List<Todo>> {
+  @override
+  FutureOr<List<Todo>> build() {
+    // TODO ...
+    return [];
+  }
+
+  Future<void> addTodo(Todo todo) async {
+    // TODO
+  }
+}
+
+final myNotifierProvider =
+    AsyncNotifierProvider.autoDispose<MyNotifier, List<Todo>>(MyNotifier.new);
 ```
 
 示例 3 (dart):
 ```dart
-@riverpodclass MyNotifier extends _$MyNotifier {  @override  FutureOr<List<Todo>> build() {    // TODO ...    return [];  }  Future<void> addTodo(Todo todo) async {    // TODO  }}
+@riverpod
+class MyNotifier extends _$MyNotifier {
+  @override
+  FutureOr<List<Todo>> build() {
+    // TODO ...
+    return [];
+  }
+
+  Future<void> addTodo(Todo todo) async {
+    // TODO
+  }
+}
 ```
 
 示例 4 (dart):
 ```dart
-class MyNotifier extends AsyncNotifier<List<Todo>> {  @override  FutureOr<List<Todo>> build() async {    final json = await http.get('api/todos');    return [...json.map(Todo.fromJson)];  }}final myNotifierProvider =    AsyncNotifierProvider.autoDispose<MyNotifier, List<Todo>>(MyNotifier.new);
+class MyNotifier extends AsyncNotifier<List<Todo>> {
+  @override
+  FutureOr<List<Todo>> build() async {
+    final json = await http.get('api/todos');
+    return [...json.map(Todo.fromJson)];
+  }
+}
+
+final myNotifierProvider =
+    AsyncNotifierProvider.autoDispose<MyNotifier, List<Todo>>(MyNotifier.new);
 ```
 
 ---
@@ -309,22 +393,45 @@ If you are using [AsyncValue] to check for errors, you don't need to change anyt
 
 示例 1 (dart):
 ```dart
-void main() {  runApp(    ProviderScope(      // Never retry any provider      retry: (retryCount, error) => null,      child: MyApp(),    ),  );}
+void main() {
+  runApp(
+    ProviderScope(
+      // Never retry any provider
+      retry: (retryCount, error) => null,
+      child: MyApp(),
+    ),
+  );
+}
 ```
 
 示例 2 (dart):
 ```dart
-void main() {  final container = ProviderContainer(    // Never retry any provider    retry: (retryCount, error) => null,  );}
+void main() {
+  final container = ProviderContainer(
+    // Never retry any provider
+    retry: (retryCount, error) => null,
+  );
+}
 ```
 
 示例 3 (dart):
 ```dart
-final todoListProvider = NotifierProvider<TodoList, List<Todo>>(  TodoList.new,  // Never retry this specific provider  retry: (retryCount, error) => null,);
+final todoListProvider = NotifierProvider<TodoList, List<Todo>>(
+  TodoList.new,
+  // Never retry this specific provider
+  retry: (retryCount, error) => null,
+);
 ```
 
 示例 4 (dart):
 ```dart
-// Never retry this specific providerDuration? retry(int retryCount, Object error) => null;@Riverpod(retry: retry)class TodoList extends _$TodoList {  @override  List<Todo> build() => [];}
+// Never retry this specific providerDuration? retry(int retryCount, Object error) => null;
+
+@Riverpod(retry: retry)
+class TodoList extends _$TodoList {
+  @override
+  List<Todo> build() => [];
+}
 ```
 
 ---
@@ -455,22 +562,63 @@ Even though it costs us a few more LoC, migrating away from StateProvider enable
 
 示例 1 (dart):
 ```dart
-class CounterNotifier extends StateNotifier<int> {  CounterNotifier() : super(0);  void increment() => state++;  void decrement() => state--;}final counterNotifierProvider =    StateNotifierProvider<CounterNotifier, int>((ref) {  return CounterNotifier();});
+class CounterNotifier extends StateNotifier<int> {
+  CounterNotifier() : super(0);
+
+  void increment() => state++;
+
+  void decrement() => state--;
+}
+
+final counterNotifierProvider = StateNotifierProvider<CounterNotifier, int>((
+  ref,
+) {
+  return CounterNotifier();
+});
 ```
 
 示例 2 (dart):
 ```dart
-class CounterNotifier extends Notifier<int> {  @override  int build() => 0;  void increment() => state++;  void decrement() => state++;}final counterNotifierProvider = NotifierProvider<CounterNotifier, int>(CounterNotifier.new);
+class CounterNotifier extends Notifier<int> {
+  @override
+  int build() => 0;
+
+  void increment() => state++;
+
+  void decrement() => state++;
+}
+
+final counterNotifierProvider = NotifierProvider<CounterNotifier, int>(
+  CounterNotifier.new,
+);
 ```
 
 示例 3 (dart):
 ```dart
-@riverpodclass CounterNotifier extends _$CounterNotifier {  @override  int build() => 0;  void increment() => state++;  void decrement() => state--;}
+@riverpod
+class CounterNotifier extends _$CounterNotifier {
+  @override
+  int build() => 0;
+
+  void increment() => state++;
+
+  void decrement() => state--;
+}
 ```
 
 示例 4 (dart):
 ```dart
-class AsyncTodosNotifier extends StateNotifier<AsyncValue<List<Todo>>> {  AsyncTodosNotifier() : super(const AsyncLoading()) {    _postInit();  }  Future<void> _postInit() async {    state = await AsyncValue.guard(() async {      final json = await http.get('api/todos');      return [...json.map(Todo.fromJson)];    });  }  // ...}
+class AsyncTodosNotifier extends StateNotifier<AsyncValue<List<Todo>>> {
+  AsyncTodosNotifier() : super(const AsyncLoading()) {
+    _postInit();
+  }
+  Future<void> _postInit() async {
+    state = await AsyncValue.guard(() async {
+      final json = await http.get('api/todos');
+      return [...json.map(Todo.fromJson)];
+    });
+  }
+  // ...}
 ```
 
 ---
@@ -667,12 +815,142 @@ This flag is an advanced feature to help with some niche use-cases regarding com
 
 示例 1 (dart):
 ```dart
-// A example showcasing JsonSqFliteStorage without code generation.final storageProvider = FutureProvider<JsonSqFliteStorage>((ref) async {  // Initialize SQFlite. We should share the Storage instance between providers.  return JsonSqFliteStorage.open(    join(await getDatabasesPath(), 'riverpod.db'),  );});/// A serializable Todo class.class Todo {  const Todo({    required this.id,    required this.description,    required this.completed,  });  Todo.fromJson(Map<String, dynamic> json)      : id = json['id'] as int,        description = json['description'] as String,        completed = json['completed'] as bool;  final int id;  final String description;  final bool completed;  Map<String, dynamic> toJson() {    return {      'id': id,      'description': description,      'completed': completed,    };  }}final todosProvider =    AsyncNotifierProvider<TodosNotifier, List<Todo>>(TodosNotifier.new);class TodosNotifier extends AsyncNotifier<List<Todo>>{  @override  FutureOr<List<Todo>> build() async {    // We call persist at the start of our 'build' method.    // This will:    // - Read the DB and update the state with the persisted value the first    //   time this method executes.    // - Listen to changes on this provider and write those changes to the DB.    persist(      // We pass our JsonSqFliteStorage instance. No need to "await" the Future.      // Riverpod will take care of that.      ref.watch(storageProvider.future),      // A unique key for this state.      // No other provider should use the same key.      key: 'todos',      // By default, state is cached offline only for 2 days.      // We can optionally uncomment the following line to change cache duration.      // options: const StorageOptions(cacheTime: StorageCacheTime.unsafe_forever),      encode: jsonEncode,      decode: (json) {        final decoded = jsonDecode(json) as List;        return decoded            .map((e) => Todo.fromJson(e as Map<String, Object?>))            .toList();      },    );      // We asynchronously fetch todos from the server.      // During the await, the persisted todo list will be available.      // After the network request completes, the server state will take precedence      // over the persisted state.      final todos = await fetchTodos();      return todos;  }  Future<void> add(Todo todo) async {    // When modifying the state, no need for any extra logic to persist the change.    // Riverpod will automatically cache the new state and write it to the DB.    state = AsyncData([...await future, todo]);  }}
+// A example showcasing JsonSqFliteStorage without code generation.
+final storageProvider = FutureProvider<JsonSqFliteStorage>((ref) async {
+  // Initialize SQFlite. We should share the Storage instance between providers.
+  return JsonSqFliteStorage.open(
+    join(await getDatabasesPath(), 'riverpod.db'),
+  );
+});
+
+/// A serializable Todo class.
+class Todo {
+  const Todo({
+    required this.id,
+    required this.description,
+    required this.completed,
+  });
+
+  Todo.fromJson(Map<String, dynamic> json)
+      : id = json['id'] as int,
+        description = json['description'] as String,
+        completed = json['completed'] as bool;
+
+  final int id;
+  final String description;
+  final bool completed;
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'description': description,
+      'completed': completed,
+    };
+  }
+}
+
+final todosProvider = AsyncNotifierProvider<TodosNotifier, List<Todo>>(
+  TodosNotifier.new,
+);
+
+class TodosNotifier extends AsyncNotifier<List<Todo>> {
+  @override
+  FutureOr<List<Todo>> build() async {
+    // We call persist at the start of our 'build' method.
+    // This will:
+    // - Read the DB and update the state with the persisted value the first
+    //   time this method executes.
+    // - Listen to changes on this provider and write those changes to the DB.
+    persist(
+      // We pass our JsonSqFliteStorage instance. No need to "await" the Future.
+      // Riverpod will take care of that.
+      ref.watch(storageProvider.future),
+      // A unique key for this state.
+      // No other provider should use the same key.
+      key: 'todos',
+      // By default, state is cached offline only for 2 days.
+      // We can optionally uncomment the following line to change cache duration.
+      // options: const StorageOptions(cacheTime: StorageCacheTime.unsafe_forever),
+      encode: jsonEncode,
+      decode: (json) {
+        final decoded = jsonDecode(json) as List;
+        return decoded
+            .map((e) => Todo.fromJson(e as Map<String, Object?>))
+            .toList();
+      },
+    );
+
+    // We asynchronously fetch todos from the server.
+    // During the await, the persisted todo list will be available.
+    // After the network request completes, the server state will take precedence
+    // over the persisted state.
+    final todos = await fetchTodos();
+    return todos;
+  }
+
+  Future<void> add(Todo todo) async {
+    // When modifying the state, no need for any extra logic to persist the change.
+    // Riverpod will automatically cache the new state and write it to the DB.
+    state = AsyncData([...await future, todo]);
+  }
+}
 ```
 
 示例 2 (dart):
 ```dart
-@riverpodFuture<JsonSqFliteStorage> storage(Ref ref) async {  // Initialize SQFlite. We should share the Storage instance between providers.  return JsonSqFliteStorage.open(    join(await getDatabasesPath(), 'riverpod.db'),  );}/// A serializable Todo class. We're using Freezed for simple serialization.@freezedabstract class Todo with _$Todo {  const factory Todo({    required int id,    required String description,    required bool completed,  }) = _Todo;  factory Todo.fromJson(Map<String, dynamic> json) => _$TodoFromJson(json);}@riverpod@JsonPersist()class TodosNotifier extends _$TodosNotifier {  @override  FutureOr<List<Todo>> build() async {    // We call persist at the start of our 'build' method.    // This will:    // - Read the DB and update the state with the persisted value the first    //   time this method executes.    // - Listen to changes on this provider and write those changes to the DB.    persist(      // We pass our JsonSqFliteStorage instance. No need to "await" the Future.      // Riverpod will take care of that.      ref.watch(storageProvider.future),      // By default, state is cached offline only for 2 days.      // We can optionally uncomment the following line to change cache duration.      // options: const StorageOptions(cacheTime: StorageCacheTime.unsafe_forever),    );    // We asynchronously fetch todos from the server.    // During the await, the persisted todo list will be available.    // After the network request completes, the server state will take precedence    // over the persisted state.    final todos = await fetchTodos();    return todos;  }  Future<void> add(Todo todo) async {    // When modifying the state, no need for any extra logic to persist the change.    // Riverpod will automatically cache the new state and write it to the DB.    state = AsyncData([...await future, todo]);  }}
+@riverpod
+Future<JsonSqFliteStorage> storage(Ref ref) async {
+  // Initialize SQFlite. We should share the Storage instance between providers.
+  return JsonSqFliteStorage.open(
+    join(await getDatabasesPath(), 'riverpod.db'),
+  );
+}
+
+/// A serializable Todo class. We're using Freezed for simple serialization.
+@freezed
+abstract class Todo with _$Todo {
+  const factory Todo({
+    required int id,
+    required String description,
+    required bool completed,
+  }) = _Todo;
+
+  factory Todo.fromJson(Map<String, dynamic> json) => _$TodoFromJson(json);
+}
+
+@riverpod
+@JsonPersist()
+class TodosNotifier extends _$TodosNotifier {
+  @override
+  FutureOr<List<Todo>> build() async {
+    // We call persist at the start of our 'build' method.
+    // This will:
+    // - Read the DB and update the state with the persisted value the first
+    //   time this method executes.
+    // - Listen to changes on this provider and write those changes to the DB.
+    persist(
+      // We pass our JsonSqFliteStorage instance. No need to "await" the Future.
+      // Riverpod will take care of that.
+      ref.watch(storageProvider.future),
+      // By default, state is cached offline only for 2 days.
+      // We can optionally uncomment the following line to change cache duration.
+      // options: const StorageOptions(cacheTime: StorageCacheTime.unsafe_forever),
+    );
+
+    // We asynchronously fetch todos from the server.
+    // During the await, the persisted todo list will be available.
+    // After the network request completes, the server state will take precedence
+    // over the persisted state.
+    final todos = await fetchTodos();
+    return todos;
+  }
+
+  Future<void> add(Todo todo) async {
+    // When modifying the state, no need for any extra logic to persist the change.
+    // Riverpod will automatically cache the new state and write it to the DB.
+    state = AsyncData([...await future, todo]);
+  }
+}
 ```
 
 示例 3 (dart):
@@ -682,7 +960,35 @@ final addTodoMutation = Mutation<void>();
 
 示例 4 (dart):
 ```dart
-class AddTodoButton extends ConsumerWidget {  @override  Widget build(BuildContext context, WidgetRef ref) {    // Listen to the status of the "addTodo" side-effect    final addTodo = ref.watch(addTodoMutation);    return switch (addTodo) {      // No side-effect is in progress      // Let's show a submit button      MutationIdle() => ElevatedButton(        // Trigger the side-effect on click        onPressed: () {          // TODO see explanation after the code snippet        },        child: const Text('Submit'),      ),      // The side-effect is in progress. We show a spinner      MutationPending() => const CircularProgressIndicator(),      // The side-effect failed. We show a retry button      MutationError() => ElevatedButton(        onPressed: () {          // TODO see explanation after the code snippet        },        child: const Text('Retry'),      ),      // The side-effect was successful. We show a success message      MutationSuccess() => const Text('Todo added!'),    };  }}
+class AddTodoButton extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Listen to the status of the "addTodo" side-effect
+    final addTodo = ref.watch(addTodoMutation);
+    return switch (addTodo) {
+      // No side-effect is in progress
+      // Let's show a submit button
+      MutationIdle() => ElevatedButton(
+        // Trigger the side-effect on click
+        onPressed: () {
+          // TODO see explanation after the code snippet
+        },
+        child: const Text('Submit'),
+      ),
+      // The side-effect is in progress. We show a spinner
+      MutationPending() => const CircularProgressIndicator(),
+      // The side-effect failed. We show a retry button
+      MutationError() => ElevatedButton(
+        onPressed: () {
+          // TODO see explanation after the code snippet
+        },
+        child: const Text('Retry'),
+      ),
+      // The side-effect was successful. We show a success message
+      MutationSuccess() => const Text('Todo added!'),
+    };
+  }
+}
 ```
 
 ---

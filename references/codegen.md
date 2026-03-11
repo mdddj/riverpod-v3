@@ -54,22 +54,41 @@
 
 示例 1 (dart):
 ```dart
-final fetchUserProvider = FutureProvider.autoDispose.family<User, int>((  ref,  userId,) async {  final json = await http.get('api/user/$userId');  return User.fromJson(json);});
+final fetchUserProvider = FutureProvider.autoDispose.family<User, int>((
+  ref,
+  userId,
+) async {
+  final json = await http.get('api/user/$userId');
+  return User.fromJson(json);
+});
 ```
 
 示例 2 (dart):
 ```dart
-@riverpodFuture<User> fetchUser(Ref ref, {required int userId}) async {  final json = await http.get('api/user/$userId');  return User.fromJson(json);}
+@riverpod
+Future<User> fetchUser(Ref ref, {required int userId}) async {
+  final json = await http.get('api/user/$userId');
+  return User.fromJson(json);
+}
 ```
 
 示例 3 (dart):
 ```dart
-@riverpodString example(Ref ref) {  return 'foo';}
+@riverpod
+String example(Ref ref) {
+  return 'foo';
+}
 ```
 
 示例 4 (dart):
 ```dart
-@riverpodclass Example extends _$Example {  @override  String build() {    return 'foo';  }  // 添加方法来修改状态}
+@riverpod
+class Example extends _$Example {
+  @override
+  String build() {
+    return 'foo';
+  }
+  // 添加方法来修改状态}
 ```
 
 ---

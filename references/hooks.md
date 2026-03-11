@@ -79,22 +79,100 @@ Hooks 有独特的约束：
 
 示例 1 (dart):
 ```dart
-class FadeIn extends StatefulWidget {  const FadeIn({Key? key, required this.child}) : super(key: key);  final Widget child;  @override  State<FadeIn> createState() => _FadeInState();}class _FadeInState extends State<FadeIn> with SingleTickerProviderStateMixin {  late final AnimationController animationController = AnimationController(    vsync: this,    duration: const Duration(seconds: 2),  );  @override  void initState() {    super.initState();    animationController.forward();  }  @override  void dispose() {    animationController.dispose();    super.dispose();  }  @override  Widget build(BuildContext context) {    return AnimatedBuilder(      animation: animationController,      builder: (context, child) {        return Opacity(          opacity: animationController.value,          child: widget.child,        );      },    );  }}
+class FadeIn extends StatefulWidget {
+  const FadeIn({Key? key, required this.child}) : super(key: key);
+  final Widget child;
+
+  @override
+  State<FadeIn> createState() => _FadeInState();
+}
+
+class _FadeInState extends State<FadeIn> with SingleTickerProviderStateMixin {
+  late final AnimationController animationController = AnimationController(
+    vsync: this,
+    duration: const Duration(seconds: 2),
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    animationController.forward();
+  }
+
+  @override
+  void dispose() {
+    animationController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: animationController,
+      builder: (context, child) {
+        return Opacity(opacity: animationController.value, child: widget.child);
+      },
+    );
+  }
+}
 ```
 
 示例 2 (dart):
 ```dart
-class FadeIn extends HookWidget {  const FadeIn({Key? key, required this.child}) : super(key: key);  final Widget child;  @override  Widget build(BuildContext context) {    // 创建 AnimationController。当 widget 卸载时，控制器会自动销毁。    final animationController = useAnimationController(      duration: const Duration(seconds: 2),    );    // useEffect 相当于 initState + didUpdateWidget + dispose。    // 传递给 useEffect 的回调在第一次调用 hook 时执行，    // 然后在作为第二个参数传递的列表发生变化时执行。    // 由于我们在这里传递了一个空的 const 列表，这严格等同于 `initState`。    useEffect(() {      // 在 widget 首次渲染时启动动画。      animationController.forward();      // 我们可以选择在这里返回一些"dispose"逻辑      return null;    }, const []);    // 告诉 Flutter 在动画更新时重建此 widget。    // 这相当于 AnimatedBuilder    useAnimation(animationController);    return Opacity(      opacity: animationController.value,      child: child,    );  }}
+class FadeIn extends HookWidget {
+  const FadeIn({Key? key, required this.child}) : super(key: key);
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    // 创建 AnimationController。当 widget 卸载时，控制器会自动销毁。
+    final animationController = useAnimationController(
+      duration: const Duration(seconds: 2),
+    );
+    // useEffect 相当于 initState + didUpdateWidget + dispose。
+    // 传递给 useEffect 的回调在第一次调用 hook 时执行，
+    // 然后在作为第二个参数传递的列表发生变化时执行。
+    // 由于我们在这里传递了一个空的 const 列表，这严格等同于 `initState`。
+    useEffect(() {
+      // 在 widget 首次渲染时启动动画。
+      animationController.forward();
+      // 我们可以选择在这里返回一些"dispose"逻辑
+      return null;
+    }, const []);
+    // 告诉 Flutter 在动画更新时重建此 widget。
+    // 这相当于 AnimatedBuilder
+    useAnimation(animationController);
+    return Opacity(opacity: animationController.value, child: child);
+  }
+}
 ```
 
 示例 3 (dart):
 ```dart
-@overrideWidget build(BuildContext context) {  final animationController = useAnimationController(    duration: const Duration(seconds: 2),  );  final anotherController = useAnimationController(    duration: const Duration(seconds: 2),  );  ...}
+@override
+Widget build(BuildContext context) {
+  final animationController = useAnimationController(
+  duration: const Duration(seconds: 2),
+  );
+  final anotherController = useAnimationController(
+  duration: const Duration(seconds: 2),
+  );
+  ...}
 ```
 
 示例 4 (dart):
 ```dart
-double useFadeIn() {  final animationController = useAnimationController(    duration: const Duration(seconds: 2),  );  useEffect(() {    animationController.forward();    return null;  }, const []);  useAnimation(animationController);  return animationController.value;}
+double useFadeIn() {
+  final animationController = useAnimationController(
+    duration: const Duration(seconds: 2),
+  );
+  useEffect(() {
+    animationController.forward();
+    return null;
+  }, const []);
+  useAnimation(animationController);
+  return animationController.value;
+}
 ```
 
 ---

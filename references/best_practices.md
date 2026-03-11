@@ -60,12 +60,24 @@ Providers 应该专门是顶级 final 变量。
 
 示例 1 (dart):
 ```dart
-class WidgetState extends State<MyWidget> {  @override  void initState() {    super.initState();    // 不好：provider 应该自己初始化    ref.read(provider).init();  }}
+class WidgetState extends State<MyWidget> {
+  @override
+  void initState() {
+    super.initState();
+    // 不好：provider 应该自己初始化
+    ref.read(provider).init();
+  }
+}
 ```
 
 示例 2 (dart):
 ```dart
-ElevatedButton(  onPressed: () {    ref.read(provider).init();    Navigator.of(context).push(...);  },  child: Text('Navigate'),)
+ElevatedButton(
+onPressed: () {
+  ref.read(provider).init();
+  Navigator.of(context).push(...);
+},
+child: Text('Navigate'),)
 ```
 
 示例 3 (dart):
@@ -73,8 +85,8 @@ ElevatedButton(  onPressed: () {    ref.read(provider).init();    Navigator.of(c
 final selectedBookProvider = StateProvider<String?>((ref) => null);
 ```
 
-示例 4 (dart):
-```dart
+示例 4 (text):
+```text
 /books/books/42/books/21
 ```
 
